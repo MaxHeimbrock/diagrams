@@ -1,0 +1,12 @@
+{
+  "name": "diagrams",
+  "scripts": {
+    "export": "node scripts/export.mjs"
+  },
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@excalidraw/utils": "^0.1.5",
+    "playwright": "^1.63.0"
+  }
+}
