@@ -1,12 +1,12 @@
 {
   "name": "diagrams",
-  "scripts": {
-    "export": "node scripts/export.mjs"
-  },
-  "type": "module",
   "private": true,
+  "type": "module",
+  "scripts": {
+    "export": "node scripts/export.mjs",
+    "publish:notion": "node scripts/upload-to-notion.mjs"
+  },
   "devDependencies": {
-    "@excalidraw/utils": "^0.1.5",
-    "playwright": "^1.63.0"
+    "playwright": "1.63.0"
   }
 }

@@ -1,4 +1,4 @@
-name: Publish diagrams
+name: Publish diagrams to Notion
 
 on:
   push:
@@ -11,19 +11,18 @@ on:
       - ".github/workflows/publish-diagrams.yml"
   workflow_dispatch:
 
+# Only the newest run matters, because every run uploads every diagram.
+concurrency:
+  group: publish-diagrams
+  cancel-in-progress: true
+
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-# Serialize deploys so two quick merges can't finish out of order.
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
 
@@ -34,30 +33,20 @@ jobs:
 
       - run: npm ci
 
-      - name: Cache Playwright Chromium
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps --only-shell chromium
 
       - name: Render diagrams
         run: npm run export
 
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v4
+      - name: Keep rendered PNGs as a build artifact
+        uses: actions/upload-artifact@v4
         with:
-          path: dist
+          name: diagrams
+          path: build/
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Update Notion
+        run: npm run publish:notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_LIBRARY_PAGE: ${{ vars.NOTION_LIBRARY_PAGE }}
