@@ -301,7 +301,7 @@ async function uploadPng(pngPath) {
 async function updateImage(blockId, uploadId) {
   await notion(`/blocks/${blockId}`, {
     method: "PATCH",
-    json: { image: { type: "file_upload", file_upload: { id: uploadId } } },
+    json: { image: { file_upload: { id: uploadId } } },
   });
 }
 
@@ -329,16 +329,17 @@ const errors = [];
 
 for (const png of findPngs().sort()) {
   const diagram = relative(OUT_DIR, png).split(sep).join("/").replace(/\.png$/, ".excalidraw");
+  const imageId = library.get(diagram);
+  library.delete(diagram);
   try {
     const uploadId = await uploadPng(png);
-    if (library.has(diagram)) {
-      await updateImage(library.get(diagram), uploadId);
+    if (imageId) {
+      await updateImage(imageId, uploadId);
       console.log(`Updated ${diagram}`);
     } else {
       await addToLibrary(pageId, diagram, uploadId);
       console.log(`Added ${diagram} to the library page`);
     }
-    library.delete(diagram);
   } catch (err) {
     errors.push(`${diagram}: ${err.message}`);
   }
